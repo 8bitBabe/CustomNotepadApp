@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +14,11 @@ namespace CustomNotepadApp
     public partial class FrmMain : Form
     {
         string fileName;
+
+        SaveFileDialog sfd = new SaveFileDialog();
+        OpenFileDialog ofd = new OpenFileDialog();
+
+        public string contents = string.Empty;
 
         public FrmMain()
         {
@@ -56,13 +62,6 @@ namespace CustomNotepadApp
             textBox.SelectAll();
         }
 
-        private void ReplaceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //replaces text.
-            //define how the person will insert the old and new text
-            //TextBox.Text.Replace(oldText, newText);
-        }
-
         private void RedoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //redoes an action
@@ -74,47 +73,105 @@ namespace CustomNotepadApp
             return true;
         }
 
+        private void NewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (textBox.Text != contents)
+            {
+                DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
+                if (dr == DialogResult.Yes)
+                {
+                    sfd.Title = "Save";
+                    if (saveAs() == 0)
+                        return;
+                    else
+                    {
+                        textBox.Text = "";
+                        this.Text = "Untitled";
+                    }
+                    contents = "";
+                }
+                else if (dr == DialogResult.No)
+                {
+                    textBox.Text = "";
+                    this.Text = "Untitled";
+                    contents = "";
+                }
+                else
+                {
+                    textBox.Focus();
+                }
+            }
+            else
+            {
+                this.Text = "Untitled";
+                textBox.Text = "";
+                contents = "";
+            }
+        }
+
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //checks for changes in current window, if true, saves changes and opens other file
             if (CheckChanges())
             {
-                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     //will only open if user presses okay
-                    textBox.LoadFile(openFileDialog1.FileName);
+                    textBox.LoadFile(ofd.FileName);
                 }
             }
         }
 
-        void DoSave(string savedFile)
+        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //save the file
-            fileName = savedFile;
-            textBox.SaveFile(savedFile);
+            saveAs();
         }
 
-        void DoSaveAs()
+        int saveAs()
         {
-            //prompt for a name
-            if (saveFileDialog1.ShowDialog()==DialogResult.OK)
+            sfd.Filter = "Text Documents|*.txt";
+            sfd.DefaultExt = "txt";
+            if (sfd.ShowDialog() == DialogResult.Cancel)
             {
-                DoSave(saveFileDialog1.FileName);
-            }
-        }
-
-        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //if file is new (has no name) then the Save As will be 
-            //prompted so as to give a name, otherwise it'll just save
-            if (string.IsNullOrEmpty(fileName))
-            {
-                DoSaveAs();
+                textBox.Focus();
+                return 0;
             }
             else
             {
-                DoSave(fileName);
+                contents = textBox.Text;
+                if (this.Text == "Untitled")
+                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                else
+                {
+                    sfd.FileName = this.Text;
+                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                }
+                this.Text = sfd.FileName;
+                //
+                fileName = sfd.FileName;
+                return 1;
             }
+
+
+        }    
+
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+
+        void Save()
+        {
+            if (fileName != null)
+            {
+                using (StreamWriter writer = new StreamWriter(fileName))
+                {
+                    writer.WriteLine(textBox.Text);
+                }
+            }
+
+            else
+                saveAs();
         }
 
         private void btnFind_Click(object sender, EventArgs e)
