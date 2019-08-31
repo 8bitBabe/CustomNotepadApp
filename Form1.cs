@@ -111,14 +111,40 @@ namespace CustomNotepadApp
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //checks for changes in current window, if true, saves changes and opens other file
-            if (CheckChanges())
+            if (textBox.Text != contents)
             {
-                if (ofd.ShowDialog() == DialogResult.OK)
+                DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
+                if (dr == DialogResult.Yes)
                 {
-                    //will only open if user presses okay
-                    textBox.LoadFile(ofd.FileName);
+                    sfd.Title = "Save";
+                    Save();
+                    Open();
                 }
+                else if (dr == DialogResult.No)
+                {
+                    Open();
+                }
+                else
+                {
+                    textBox.Focus();
+                }
+            }
+            else
+            {
+                Open();
+            }
+        }
+
+        private void Open()
+        {
+            ofd.Filter = "Text Documents|*.txt";
+            ofd.DefaultExt = ".txt";
+            //checks for changes in current window, if true, saves changes and opens other file
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                //will only open if user presses okay
+                textBox.LoadFile(ofd.FileName, RichTextBoxStreamType.PlainText);
             }
         }
 
@@ -130,7 +156,7 @@ namespace CustomNotepadApp
         int saveAs()
         {
             sfd.Filter = "Text Documents|*.txt";
-            sfd.DefaultExt = "txt";
+            sfd.DefaultExt = ".txt";
             if (sfd.ShowDialog() == DialogResult.Cancel)
             {
                 textBox.Focus();
@@ -139,20 +165,15 @@ namespace CustomNotepadApp
             else
             {
                 contents = textBox.Text;
-                if (this.Text == "Untitled")
-                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                if (this.Text == "CustomNotepadApp - Untitled")
+                    textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
                 else
                 {
-                    sfd.FileName = this.Text;
-                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                    //fileName = sfd.FileName;
+                    textBox.SaveFile(fileName, RichTextBoxStreamType.PlainText);
                 }
-                this.Text = sfd.FileName;
-                //
-                fileName = sfd.FileName;
                 return 1;
             }
-
-
         }    
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -202,6 +223,19 @@ namespace CustomNotepadApp
         {
             textBox.SelectAll();
             //change font and size
+        }
+
+        private void FrmMain_Load(object sender, EventArgs e)
+        {
+            //I want this to change the title of the window to the open file's 
+            //name, else just keep it Untitled
+            if (this.ofd.FileName != null)
+                this.Text = "CustomNotepadApp -" + ofd.FileName;
+
+            else
+                this.Text = "CustomNotepadApp - Untitled";
+
+
         }
     }
 }
