@@ -68,11 +68,6 @@ namespace CustomNotepadApp
             textBox.Redo();
         }
 
-        bool CheckChanges()
-        {
-            return true;
-        }
-
         private void NewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (textBox.Text != contents)
@@ -119,10 +114,12 @@ namespace CustomNotepadApp
                     sfd.Title = "Save";
                     Save();
                     Open();
+                    NameChange();
                 }
                 else if (dr == DialogResult.No)
                 {
                     Open();
+                    NameChange();
                 }
                 else
                 {
@@ -132,6 +129,7 @@ namespace CustomNotepadApp
             else
             {
                 Open();
+                NameChange();
             }
         }
 
@@ -166,7 +164,10 @@ namespace CustomNotepadApp
             {
                 contents = textBox.Text;
                 if (this.Text == "CustomNotepadApp - Untitled")
+                {
                     textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
+                    NameChange();
+                }
                 else
                 {
                     //fileName = sfd.FileName;
@@ -227,15 +228,18 @@ namespace CustomNotepadApp
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            //I want this to change the title of the window to the open file's 
-            //name, else just keep it Untitled
-            if (this.ofd.FileName != null)
-                this.Text = "CustomNotepadApp -" + ofd.FileName;
-
+            if (fileName != null)
+                NameChange();
             else
                 this.Text = "CustomNotepadApp - Untitled";
+        }
 
+        private void NameChange ()
+        {
 
+            string path = new FileInfo(ofd.FileName).FullName;
+            string fileTitle = Path.GetFileNameWithoutExtension(path);
+            this.Text = "CustomNotepadApp -" + fileTitle;
         }
     }
 }

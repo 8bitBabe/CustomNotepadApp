@@ -1,0 +1,9 @@
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\bin\Release\CustomNotepadApp.exe.config
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\bin\Release\CustomNotepadApp.exe
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\bin\Release\CustomNotepadApp.pdb
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.csprojAssemblyReference.cache
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.FrmMain.resources
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.Properties.Resources.resources
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.csproj.GenerateResource.cache
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.exe
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Release\CustomNotepadApp.pdb
