@@ -17,6 +17,10 @@ namespace CustomNotepadApp
 
         SaveFileDialog sfd = new SaveFileDialog();
         OpenFileDialog ofd = new OpenFileDialog();
+        FontDialog fd = new FontDialog();
+
+        bool isArg;
+        bool isClosing;        
 
         public string contents = string.Empty;
 
@@ -26,11 +30,23 @@ namespace CustomNotepadApp
             if (args.Length > 0) //now accepts command line arguments
             {
                 string openFile = args[0];
-                string loadPath = new FileInfo(openFile).FullName;
-                string loadTitle = Path.GetFileNameWithoutExtension(loadPath);
-                this.Text = "CustomNotepadApp - " + loadTitle;
+                string loadedPath = new FileInfo(openFile).FullName;
+                string loadedTitle = Path.GetFileNameWithoutExtension(loadedPath);
+                this.Text = "CustomNotepadApp - " + loadedTitle;
                 textBox.LoadFile(openFile, RichTextBoxStreamType.PlainText);
+                isArg = true;
             }
+            else
+                isArg = false;
+        }
+
+        private void NameChange()
+        {
+            //look up the location of the file and extract the name without the
+            //extension to then alter the title bar of the current window
+            string path = new FileInfo(ofd.FileName).FullName;
+            string fileTitle = Path.GetFileNameWithoutExtension(path);
+            this.Text = "CustomNotepadApp - " + fileTitle;
         }
 
         private void UndoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -86,7 +102,7 @@ namespace CustomNotepadApp
                 {
                     //if yes, run the save method and open empty file
                     sfd.Title = "Save";
-                    if (saveAs() == 0)
+                    if (SaveAs() == 0)
                         //if the save method was cancelled, cancel operation
                         return;
                     else
@@ -150,7 +166,6 @@ namespace CustomNotepadApp
                 NameChange();
             }
         }
-
         private void Open()
         {
             ofd.Filter = "Text Documents|*.txt";
@@ -166,10 +181,10 @@ namespace CustomNotepadApp
 
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            saveAs();
+            SaveAs();
         }
 
-        int saveAs()
+        int SaveAs()
         {
             sfd.Filter = "Text Documents|*.txt";
             sfd.DefaultExt = ".txt";
@@ -186,12 +201,13 @@ namespace CustomNotepadApp
                 {
                     //run Save and adjust the title bar 
                     textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
-                    NameChange();
+                    if (isClosing == false)
+                        NameChange();
                 }
                 else
                 {
                     //just save the file if there was already a file name 
-                    textBox.SaveFile(fileName, RichTextBoxStreamType.PlainText);
+                    textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
                 }
                 return 1;
             }
@@ -202,19 +218,22 @@ namespace CustomNotepadApp
             Save();
         }
 
-        void Save()
+        private void Save()
         {
-            if (fileName != null)
+            //string path = new FileInfo(ofd.FileName).FullName;
+            //string fileTitle = Path.GetFileNameWithoutExtension(path);
+
+            if (this.Text == "CustomNotepadApp - Untitled")
             {
                 //if there's no file name, write one
-                using (StreamWriter writer = new StreamWriter(fileName))
+                using (StreamWriter writer = new StreamWriter(this.Text))
                 {
                     writer.WriteLine(textBox.Text);
                 }
             }
 
             else
-                saveAs();
+                SaveAs();
         }
 
         private void btnFind_Click(object sender, EventArgs e)
@@ -231,38 +250,99 @@ namespace CustomNotepadApp
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            CloseFile();
+            //Application.Exit();
+        }
+
+        private void CloseFile()
+        {
             //exit
-            Close();
+            if (textBox.Text != contents)
+            {
+                //check if there's any written text so as to ask the user if they wish to save their work
+                DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
+                if (dr == DialogResult.Yes)
+                {
+                    isClosing = true;
+                    //if yes, save current and close
+                    sfd.Title = "Save";
+                    Save();
+                }
+                else if (dr == DialogResult.No)
+                {
+                    
+                }
+                else
+                {
+                    isClosing = false;
+                    textBox.Focus();
+                }
+            }
+            else
+            {
+                
+            }
         }
 
         private void SearchBarToolStripMenuItem_Click(object sender, EventArgs e)
         {
-           //checks wether the use wants to see the seacrch bar or not
-            bool toShow = (searchBar.Visible == false) ? false : true;
-        }
-
-        private void FontToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            textBox.SelectAll();
-            //change font and size
+            //checks wether the use wants to see the seacrch bar or not
+            searchBar.Visible = (searchBar.Visible == true) ? false: true;
+            btnSearchBar.Checked = (btnSearchBar.Checked == true) ? false : true;
         }
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            //check if there's a file name and run name change, if yes
-            if (fileName != null)
-                NameChange();
-            else
-                this.Text = "CustomNotepadApp - Untitled";
+            if (isArg == false)
+            {
+                //check if there's a file name and run name change, if yes
+                if (fileName != null)
+                    NameChange();
+                else
+                    this.Text = "CustomNotepadApp - Untitled";
+            }
         }
 
-        private void NameChange ()
+        private void StatusBarToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //look up the location of the file and extract the name without the
-            //extension to then alter the title bar of the current window
-            string path = new FileInfo(ofd.FileName).FullName;
-            string fileTitle = Path.GetFileNameWithoutExtension(path);
-            this.Text = "CustomNotepadApp - " + fileTitle;
+            //toggles the visibility for the status bar and un/checks the button
+            statusBar.Visible = (statusBar.Visible == true) ? false : true;
+            btnStatusBar.Checked = (btnStatusBar.Checked == true) ? false : true;
+        }
+
+        private void FontToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            //change font and size
+            fontDialog1.ShowColor = true;
+
+            fontDialog1.Font = textBox.Font;
+            fontDialog1.Color = textBox.ForeColor;
+
+            if (fontDialog1.ShowDialog() != DialogResult.Cancel)
+            {
+                textBox.Font = fontDialog1.Font;
+                textBox.ForeColor = fontDialog1.Color;
+            }
+        }
+
+        private void WordWrapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //activates or deactivates word wrap and checks/unchecks the box
+            textBox.WordWrap = (textBox.WordWrap == true) ? false : true;
+            btnWrap.Checked = (btnWrap.Checked == true) ? false : true;
+        }
+
+        private void AboutCustomNotepadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = MessageBox.Show("Custom NotepadApp brought to life by 8B2Studios. " +
+                "\nLook us up on Facebook, Instagram and Twitter!", "About NotepadApp", 
+                MessageBoxButtons.OK);
+        }
+
+        private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            CloseFile();
+            //Application.Exit();
         }
     }
 }
