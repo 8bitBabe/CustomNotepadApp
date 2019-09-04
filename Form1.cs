@@ -14,13 +14,16 @@ namespace CustomNotepadApp
     public partial class FrmMain : Form
     {
         string fileName;
+        string currentPath;
 
+        FileSystemWatcher fsw = new FileSystemWatcher();
         SaveFileDialog sfd = new SaveFileDialog();
         OpenFileDialog ofd = new OpenFileDialog();
         FontDialog fd = new FontDialog();
 
         bool isArg;
-        bool isClosing;        
+        bool isClosing = false;
+        bool isChanged;
 
         public string contents = string.Empty;
 
@@ -30,23 +33,35 @@ namespace CustomNotepadApp
             if (args.Length > 0) //now accepts command line arguments
             {
                 string openFile = args[0];
-                string loadedPath = new FileInfo(openFile).FullName;
-                string loadedTitle = Path.GetFileNameWithoutExtension(loadedPath);
-                this.Text = "CustomNotepadApp - " + loadedTitle;
+                NameChange(openFile);
                 textBox.LoadFile(openFile, RichTextBoxStreamType.PlainText);
                 isArg = true;
+                currentPath = openFile;
             }
             else
                 isArg = false;
         }
 
-        private void NameChange()
+        private void FrmMain_Load(object sender, EventArgs e)
         {
-            //look up the location of the file and extract the name without the
-            //extension to then alter the title bar of the current window
-            string path = new FileInfo(ofd.FileName).FullName;
-            string fileTitle = Path.GetFileNameWithoutExtension(path);
-            this.Text = "CustomNotepadApp - " + fileTitle;
+            if (isArg == false)                
+                this.Text = "CustomNotepadApp - Untitled";
+
+        }
+
+        private void NameChange(string openingFile)
+        {
+            if (openingFile == null) {
+                this.Text = "CustomNotepadApp - Untitled";
+            }
+            else
+            {
+                //look up the location of the file and extract the name without the
+                //extension to then alter the title bar of the current window
+                string path = new FileInfo(openingFile).FullName;
+                string fileTitle = Path.GetFileNameWithoutExtension(path);
+                this.Text = "CustomNotepadApp - " + fileTitle;
+            }
         }
 
         private void UndoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -92,11 +107,12 @@ namespace CustomNotepadApp
             textBox.Redo();
         }
 
+
         private void NewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //check if there's any written text so as to ask the user if they wish to save their work
             if (textBox.Text != contents)
-            {
+            { 
                 DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
                 if (dr == DialogResult.Yes)
                 {
@@ -109,7 +125,7 @@ namespace CustomNotepadApp
                     {
                         //if Save method executes, open new file
                         textBox.Text = "";
-                        this.Text = "Untitled";
+                        NameChange("");
                     }
                     contents = "";
                 }
@@ -117,7 +133,7 @@ namespace CustomNotepadApp
                 {
                     //if no, just open new file
                     textBox.Text = "";
-                    this.Text = "Untitled";
+                    NameChange("");
                     contents = "";
                 }
                 else
@@ -129,7 +145,7 @@ namespace CustomNotepadApp
             else
             {
                 //if the box has nothing, just open the new file 
-                this.Text = "Untitled";
+                NameChange("");
                 textBox.Text = "";
                 contents = "";
             }
@@ -139,6 +155,8 @@ namespace CustomNotepadApp
         {
             if (textBox.Text != contents)
             {
+                //fileName = ofd.FileName;
+                
                 //check if there's any written text so as to ask the user if they wish to save their work
                 DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
                 if (dr == DialogResult.Yes)
@@ -147,13 +165,13 @@ namespace CustomNotepadApp
                     sfd.Title = "Save";
                     Save();
                     Open();
-                    NameChange();
+                    NameChange(ofd.FileName);
                 }
                 else if (dr == DialogResult.No)
                 {
                     //open new and refresh title
                     Open();
-                    NameChange();
+                    NameChange(ofd.FileName);
                 }
                 else
                 {
@@ -163,9 +181,10 @@ namespace CustomNotepadApp
             else
             {
                 Open();
-                NameChange();
+                NameChange(ofd.FileName);
             }
         }
+
         private void Open()
         {
             ofd.Filter = "Text Documents|*.txt";
@@ -176,6 +195,7 @@ namespace CustomNotepadApp
             {
                 //will only open if user presses okay
                 textBox.LoadFile(ofd.FileName, RichTextBoxStreamType.PlainText);
+                currentPath = ofd.FileName;
             }
         }
 
@@ -197,17 +217,17 @@ namespace CustomNotepadApp
             else
             {
                 contents = textBox.Text; //contents of the rich text box
-                if (this.Text == "CustomNotepadApp - Untitled")
+                if (sfd.FileName == null)
                 {
                     //run Save and adjust the title bar 
-                    textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
+                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
                     if (isClosing == false)
-                        NameChange();
+                        NameChange(sfd.FileName);
                 }
                 else
                 {
-                    //just save the file if there was already a file name 
-                    textBox.SaveFile(this.Text, RichTextBoxStreamType.PlainText);
+                    sfd.FileName = this.Text;
+                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
                 }
                 return 1;
             }
@@ -220,20 +240,19 @@ namespace CustomNotepadApp
 
         private void Save()
         {
-            //string path = new FileInfo(ofd.FileName).FullName;
-            //string fileTitle = Path.GetFileNameWithoutExtension(path);
-
-            if (this.Text == "CustomNotepadApp - Untitled")
+            if (isChanged == true)
             {
-                //if there's no file name, write one
-                using (StreamWriter writer = new StreamWriter(this.Text))
+                if (Text != "CustomNotepadApp - Untitled")
                 {
-                    writer.WriteLine(textBox.Text);
-                }
-            }
+                    using (StreamWriter writer = new StreamWriter(currentPath))
+                    {
+                        writer.WriteLine(textBox.Text);
+                    }
 
-            else
-                SaveAs();
+                }
+                else
+                    SaveAs();
+            }
         }
 
         private void btnFind_Click(object sender, EventArgs e)
@@ -248,59 +267,11 @@ namespace CustomNotepadApp
             textBox.Text = textBox.Text.Replace(findBox.Text, replaceBox.Text);
         }
 
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            CloseFile();
-            //Application.Exit();
-        }
-
-        private void CloseFile()
-        {
-            //exit
-            if (textBox.Text != contents)
-            {
-                //check if there's any written text so as to ask the user if they wish to save their work
-                DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
-                if (dr == DialogResult.Yes)
-                {
-                    isClosing = true;
-                    //if yes, save current and close
-                    sfd.Title = "Save";
-                    Save();
-                }
-                else if (dr == DialogResult.No)
-                {
-                    
-                }
-                else
-                {
-                    isClosing = false;
-                    textBox.Focus();
-                }
-            }
-            else
-            {
-                
-            }
-        }
-
         private void SearchBarToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //checks wether the use wants to see the seacrch bar or not
             searchBar.Visible = (searchBar.Visible == true) ? false: true;
             btnSearchBar.Checked = (btnSearchBar.Checked == true) ? false : true;
-        }
-
-        private void FrmMain_Load(object sender, EventArgs e)
-        {
-            if (isArg == false)
-            {
-                //check if there's a file name and run name change, if yes
-                if (fileName != null)
-                    NameChange();
-                else
-                    this.Text = "CustomNotepadApp - Untitled";
-            }
         }
 
         private void StatusBarToolStripMenuItem_Click(object sender, EventArgs e)
@@ -342,7 +313,53 @@ namespace CustomNotepadApp
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             CloseFile();
-            //Application.Exit();
+            if (isClosing == false)
+                e.Cancel = true;
+        }
+
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void CloseFile()
+        {
+            //exit
+            if (textBox.Text != contents)
+            {
+                if (isChanged == true)
+                {
+                    //check if there's any written text so as to ask the user if they wish to save their work
+                    DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
+                    if (dr == DialogResult.Yes)
+                    {
+                        isClosing = true;
+                        //if yes, save current and close
+                        sfd.Title = "Save";
+                        Save();
+                        return;
+                    }
+                    else if (dr == DialogResult.No)
+                    {
+                        isClosing = true;
+                        return;
+                    }
+                    else if (dr == DialogResult.Cancel)
+                    {
+                        isClosing = false;
+                        textBox.Focus();
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        private void TextBox_TextChanged(object sender, EventArgs e)
+        {
+            isChanged = true;
         }
     }
 }

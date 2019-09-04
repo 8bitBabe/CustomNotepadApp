@@ -6,3 +6,4 @@ C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Debug\CustomN
 C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Debug\CustomNotepadApp.csproj.GenerateResource.cache
 C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Debug\CustomNotepadApp.exe
 C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Debug\CustomNotepadApp.pdb
+C:\Users\Denise\source\repos\CustomNotepadApp\CustomNotepadApp\obj\Debug\CustomNotepadApp.csprojAssemblyReference.cache
