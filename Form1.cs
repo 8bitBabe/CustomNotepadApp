@@ -51,7 +51,7 @@ namespace CustomNotepadApp
 
         private void NameChange(string openingFile)
         {
-            if (openingFile == null) {
+            if (openingFile == "") {
                 this.Text = "CustomNotepadApp - Untitled";
             }
             else
@@ -216,18 +216,19 @@ namespace CustomNotepadApp
             }
             else
             {
-                contents = textBox.Text; //contents of the rich text box
-                if (sfd.FileName == null)
+                fileName = sfd.FileName;
+                //contents = textBox.Text; //contents of the rich text box
+                if (fileName == "")
                 {
                     //run Save and adjust the title bar 
                     textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
                     if (isClosing == false)
-                        NameChange(sfd.FileName);
+                        NameChange(fileName);
                 }
                 else
                 {
-                    sfd.FileName = this.Text;
                     textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                    NameChange(fileName);
                 }
                 return 1;
             }
