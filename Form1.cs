@@ -337,12 +337,10 @@ namespace CustomNotepadApp
                         //if yes, save current and close
                         sfd.Title = "Save";
                         Save();
-                        return;
                     }
                     else if (dr == DialogResult.No)
                     {
                         isClosing = true;
-                        return;
                     }
                     else if (dr == DialogResult.Cancel)
                     {
@@ -353,7 +351,7 @@ namespace CustomNotepadApp
             }
             else
             {
-                return;
+                isClosing = true;
             }
         }
 
