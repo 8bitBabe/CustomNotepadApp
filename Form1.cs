@@ -1,32 +1,34 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+
+/*Custom Notepad App was made inspired off the original Microsoft Notepad App to practice
+ using Windows Forms and be familiarized with the c# dotNET Framework
+ This code was written and documented by 8BitBabe*/
 
 namespace CustomNotepadApp
 {
     public partial class FrmMain : Form
     {
+
+        /*variables used to store the file name and the path of the file just opened, also to compare
+         the string contents of the rich textbox; 
+         booleans to determine if the app was opened by default or to open a file, to determine if the program is closing and
+         if there was any changes to the rich textbox*/
         string fileName;
         string currentPath;
 
-        FileSystemWatcher fsw = new FileSystemWatcher();
-        SaveFileDialog sfd = new SaveFileDialog();
-        OpenFileDialog ofd = new OpenFileDialog();
-        FontDialog fd = new FontDialog();
+        public string contents = string.Empty;
 
         bool isArg;
         bool isClosing = false;
         bool isChanged;
 
-        public string contents = string.Empty;
+        SaveFileDialog sfd = new SaveFileDialog();
+        OpenFileDialog ofd = new OpenFileDialog();
 
+
+        //App boot methods
         public FrmMain(string[] args)
         {
             InitializeComponent();
@@ -44,15 +46,15 @@ namespace CustomNotepadApp
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            if (isArg == false)                
-                this.Text = "CustomNotepadApp - Untitled";
+            if (isArg == false)
+                NameChange("");
 
         }
 
         private void NameChange(string openingFile)
         {
             if (openingFile == "") {
-                this.Text = "CustomNotepadApp - Untitled";
+                this.Text = "CustomNotepadApp - Untitled"; //if no arg, default title
             }
             else
             {
@@ -64,50 +66,9 @@ namespace CustomNotepadApp
             }
         }
 
-        private void UndoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //undoes an action
-            textBox.Undo();
-        }
 
-        private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //copies text
-            textBox.Copy();
-        }
-
-        private void CutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //cuts text
-            textBox.Cut();
-        }
-
-        private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //pastes text
-            textBox.Paste();
-        }
-
-        private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //deletes text
-            textBox.Clear();
-        }
-
-
-        private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //selects everything in the text box
-            textBox.SelectAll();
-        }
-
-        private void RedoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //redoes an action
-            textBox.Redo();
-        }
-
-
+        //File Menu methods start here
+        //Exit methods will remain at the end
         private void NewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //check if there's any written text so as to ask the user if they wish to save their work
@@ -154,9 +115,7 @@ namespace CustomNotepadApp
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (textBox.Text != contents)
-            {
-                //fileName = ofd.FileName;
-                
+            {                
                 //check if there's any written text so as to ask the user if they wish to save their work
                 DialogResult dr = MessageBox.Show("Do You want to save the changes made to " + this.Text, "Save", MessageBoxButtons.YesNoCancel);
                 if (dr == DialogResult.Yes)
@@ -210,26 +169,21 @@ namespace CustomNotepadApp
             sfd.DefaultExt = ".txt";
             if (sfd.ShowDialog() == DialogResult.Cancel)
             {
-                //operation canceled, continue on current work and return 0
+                //operation canceled
                 textBox.Focus();
                 return 0;
             }
             else
             {
                 fileName = sfd.FileName;
-                //contents = textBox.Text; //contents of the rich text box
-                if (fileName == "")
-                {
-                    //run Save and adjust the title bar 
-                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
-                    if (isClosing == false)
-                        NameChange(fileName);
-                }
-                else
-                {
-                    textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+
+                //save and adjust the title bar 
+                textBox.SaveFile(sfd.FileName, RichTextBoxStreamType.PlainText);
+                if (isClosing == false) //if saving before closing the app, don't alter title
                     NameChange(fileName);
-                }
+
+                //set to false because all changes have been saved
+                isChanged = false;
                 return 1;
             }
         }    
@@ -243,11 +197,12 @@ namespace CustomNotepadApp
         {
             if (isChanged == true)
             {
-                if (Text != "CustomNotepadApp - Untitled")
+                if (Text != "CustomNotepadApp - Untitled") //if title is not default
                 {
                     using (StreamWriter writer = new StreamWriter(currentPath))
                     {
-                        writer.WriteLine(textBox.Text);
+                        writer.WriteLine(textBox.Text); //overwrite what the original file had in the textbox
+                        isChanged = false;
                     }
 
                 }
@@ -256,30 +211,64 @@ namespace CustomNotepadApp
             }
         }
 
-        private void btnFind_Click(object sender, EventArgs e)
+        private void TextBox_TextChanged(object sender, EventArgs e)
         {
-            //finds all words in the richtextBox, selects first occurance
-            textBox.Find(findBox.Text);
-        }
-        private void btnReplace_Click(object sender, EventArgs e)
-        {
-            //replaces all occurances of text in the findBox and replaces them 
-            //with the text in the replaceBox
-            textBox.Text = textBox.Text.Replace(findBox.Text, replaceBox.Text);
+            //checks if there have been any changes in the rich textbox
+            isChanged = true;
         }
 
-        private void SearchBarToolStripMenuItem_Click(object sender, EventArgs e)
+
+        //Edit Menu methods start here
+        private void UndoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //checks wether the use wants to see the seacrch bar or not
-            searchBar.Visible = (searchBar.Visible == true) ? false: true;
-            btnSearchBar.Checked = (btnSearchBar.Checked == true) ? false : true;
+            //undoes an action
+            textBox.Undo();
         }
 
-        private void StatusBarToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RedoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //toggles the visibility for the status bar and un/checks the button
-            statusBar.Visible = (statusBar.Visible == true) ? false : true;
-            btnStatusBar.Checked = (btnStatusBar.Checked == true) ? false : true;
+            //redoes an action
+            textBox.Redo();
+        }
+
+        private void CutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //cuts text
+            textBox.Cut();
+        }
+
+        private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //copies text
+            textBox.Copy();
+        }
+
+
+        private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //pastes text
+            textBox.Paste();
+        }
+
+        private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //deletes text
+            textBox.Clear();
+        }
+
+        private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //selects everything in the text box
+            textBox.SelectAll();
+        }
+
+
+        //Format Menu methods start here
+        private void WordWrapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //activates or deactivates word wrap and checks/unchecks the box
+            textBox.WordWrap = (textBox.WordWrap == true) ? false : true;
+            btnWrap.Checked = (btnWrap.Checked == true) ? false : true;
         }
 
         private void FontToolStripMenuItem_Click_1(object sender, EventArgs e)
@@ -297,13 +286,36 @@ namespace CustomNotepadApp
             }
         }
 
-        private void WordWrapToolStripMenuItem_Click(object sender, EventArgs e)
+
+        //View Menu methods and the Search Bar methods start here 
+        private void btnFind_Click(object sender, EventArgs e)
         {
-            //activates or deactivates word wrap and checks/unchecks the box
-            textBox.WordWrap = (textBox.WordWrap == true) ? false : true;
-            btnWrap.Checked = (btnWrap.Checked == true) ? false : true;
+            //finds all words in the richtextBox, selects first occurence
+            textBox.Find(findBox.Text);
+        }
+        private void btnReplace_Click(object sender, EventArgs e)
+        {
+            //replaces all occurences of text in the findBox and replaces them 
+            //with the text in the replaceBox
+            textBox.Text = textBox.Text.Replace(findBox.Text, replaceBox.Text);
         }
 
+        private void SearchBarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //checks wether the user wants to see the seacrch bar or not; checks box accordingly
+            searchBar.Visible = (searchBar.Visible == true) ? false : true;
+            btnSearchBar.Checked = (btnSearchBar.Checked == true) ? false : true;
+        }
+
+        private void StatusBarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //toggles the visibility for the status bar and un/checks the button
+            statusBar.Visible = (statusBar.Visible == true) ? false : true;
+            btnStatusBar.Checked = (btnStatusBar.Checked == true) ? false : true;
+        }
+
+
+        //Help menu method starts here 
         private void AboutCustomNotepadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DialogResult dr = MessageBox.Show("Custom NotepadApp brought to life by 8B2Studios. " +
@@ -311,11 +323,13 @@ namespace CustomNotepadApp
                 MessageBoxButtons.OK);
         }
 
+
+        //Application Closing methods start here 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             CloseFile();
             if (isClosing == false)
-                e.Cancel = true;
+                e.Cancel = true; //cancel the closing event
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -341,24 +355,19 @@ namespace CustomNotepadApp
                     }
                     else if (dr == DialogResult.No)
                     {
-                        isClosing = true;
+                        isClosing = true; //don't save, continue event
                     }
                     else if (dr == DialogResult.Cancel)
                     {
-                        isClosing = false;
+                        isClosing = false; //cancel event
                         textBox.Focus();
                     }
                 }
             }
             else
             {
-                isClosing = true;
+                isClosing = true; //nothing to save, just close
             }
-        }
-
-        private void TextBox_TextChanged(object sender, EventArgs e)
-        {
-            isChanged = true;
         }
     }
 }
